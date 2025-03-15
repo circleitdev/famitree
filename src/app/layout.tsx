@@ -1,38 +1,30 @@
-import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import '@/styles/globals.css';
 
-import { Toaster } from "@/components/ui/sonner";
-import { cn } from "@/lib/utils";
+import { Inter as Font } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", });
+const font = Font({
+	weight: ['400', '500', '600', '700', '800'],
+	subsets: ['latin'],
+	display: 'block',
+	preload: true,
+});
 
 export const metadata: Metadata = {
-  title: "Silsilah Keluarga",
-  description: "Buat silsilah keluargamu disini. Gratis!",
+	title: 'Famitree',
+	description: 'Enhanced family tree aka silsilah keluarga',
 };
 
-// I'm sorry a11y, but it breaks zoom on mobile :(
 export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-}
+	width: 'device-width',
+	height: 'device-height',
+	initialScale: 1.0,
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={cn(
-        "min-h-screen bg-background font-sans antialiased",
-        inter.variable
-      )}>
-        {children}
-        <Toaster />
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+	return (
+		<html lang='en'>
+			<body className={`${font.className} antialiased`}>{children}</body>
+		</html>
+	);
 }
