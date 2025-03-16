@@ -2,7 +2,7 @@ import { v4 as uuid } from '@lukeed/uuid';
 import { useEffect, useState } from 'react';
 import { FamilyNode } from '@/types/globals';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shadcn/select';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { Label } from '@/components/shadcn/label';
 import { Input } from '@/components/shadcn/input';
 import { RadioGroup, RadioGroupItem } from '@/components/shadcn/radio-group';
@@ -81,6 +81,7 @@ export default function Editor({ editingNode, nodes, setNodes, openEditor, setOp
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle className='font-bold'>{editingNode ? 'Ubah Data' : 'Tambah Data'}</DialogTitle>
+					<DialogDescription>{editingNode ? 'Ubah data silsilah keluarga terkair' : 'Tambah data silsilah keluarga terkait'}</DialogDescription>
 				</DialogHeader>
 				<div className='grid gap-4 py-4'>
 					<div className='grid grid-cols-4 items-center gap-4'>
