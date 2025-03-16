@@ -30,9 +30,7 @@ export type MenuFamilyNode = {
 export type FamilyTreeFamilyNode = {
 	nodes: FamilyNode[];
 	nodesView?: 'expand' | 'collapse' | 'default';
-	familyId: string | null;
 	saveToLocalStorage: (nodes: FamilyNode[]) => void;
 	chart: OrgChart<FamilyNode>;
-	setLastSync: (lastSync: Date) => void;
 	clickNodeAction: (node: FamilyNode) => void;
 };
