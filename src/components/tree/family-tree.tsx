@@ -1,45 +1,71 @@
 import { FamilyNode, FamilyTreeFamilyNode } from '@/types/globals';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import Image from 'next/image';
+import { useLayoutEffect, useRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const NodeElement = (nodes: FamilyNode[], node: FamilyNode) => {
 	return renderToStaticMarkup(
-		<div className='h-full rounded border border-gray-200 bg-gray-100 p-4 text-base'>
-			<div className='text-lg font-bold'>
-				[{node.sex.toString()}] {node.name}
+		<div className='relative flex h-full flex-col gap-2 rounded-lg border p-5 text-base'>
+			<div className='flex'>
+				<div className='group -mr-5'>
+					<Image
+						height={100}
+						width={100}
+						src={node.sex === 'L' ? 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Nolan&backgroundColor=b6e3f4' : 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Jameson&backgroundColor=b6e3f4'}
+						alt=''
+						className='relative z-10 !m-0 h-10 w-10 rounded-full border-2 border-white object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105'
+					/>
+				</div>
+				{node.spouse && (
+					<div className='group'>
+						<Image
+							height={100}
+							width={100}
+							src={node.sex === 'P' ? 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Nolan&backgroundColor=b6e3f4' : 'https://api.dicebear.com/9.x/pixel-art/svg?seed=Jameson&backgroundColor=b6e3f4'}
+							alt=''
+							className='relative !m-0 h-10 w-10 rounded-full border-2 border-white object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105'
+						/>
+					</div>
+				)}
 			</div>
-			{node.spouse ? <div className='text-sm'>Pasangan : {node.spouse}</div> : ''}
-			<div className='text-sm'>Anak : {getChildren(nodes, node.id)}</div>
-			{node.notes ? <div className='text-sm'>Catatan : {node.notes}</div> : ''}
+			<div className={`${node.parentId ? 'font-normal' : 'font-bold'} mt-3`}>
+				<b>{`${node.name} (${node.sex.toString()}) `}</b>
+				{node.spouse && 'dan ' + node.spouse + (node.sex == 'L' ? ' (P)' : ' (L)')}
+			</div>
+			<div className='text-sm'>
+				<div>TTL:</div>
+				Surabaya, 17 Agustus 1945
+			</div>
+			<div className='text-sm'>
+				<div>Alamat:</div>
+				Jl. Pahlawan No.17, Kel. Belly Urip, Kec. Supre Sewu, Kota. Surabaya
+			</div>
+			{/* {node.spouse ? <div className='text-sm'>Pasangan: {node.spouse}</div> : ''}
+			{node.spouse ? <div className='text-sm'>Pasangan: {node.spouse}</div> : ''}
+			{node.spouse ? <div className='text-sm'>Pasangan: {node.spouse}</div> : ''} */}
+			<div className='text-sm'>
+				<div>Jumlah Anak:</div>
+				{getTotalChildren(nodes, node.id)}
+			</div>
+			<div className='text-sm'>
+				<div>Keterangan:</div>
+				{node.notes ? node.notes : '-'}
+			</div>
 		</div>,
 	);
 };
 
-const getChildren = (nodes: FamilyNode[], parentId: string) => {
+const getTotalChildren = (nodes: FamilyNode[], parentId: string) => {
 	const children = nodes.filter((node) => node.parentId === parentId).map((child) => child.name);
 	if (children.length > 0) {
-		return children.join(', ');
+		return children.length;
 	}
-	return '-';
+	return 0;
 };
 
-export default function FamilyTree({ setLastSync, chart, saveToLocalStorage, nodesView = 'default', nodes, clickNodeAction, familyId }: FamilyTreeFamilyNode) {
+export default function FamilyTree({ chart, nodesView = 'default', nodes, clickNodeAction }: FamilyTreeFamilyNode) {
 	const d3Container = useRef(null);
-	const isInitialRender = useRef(true);
-	const loadLocal = useSearchParams().get('local') === 'true';
-
-	// auto save on every nodes change
-	useEffect(() => {
-		if (isInitialRender.current) {
-			isInitialRender.current = false;
-		} else {
-			if (familyId !== '' && !loadLocal) {
-				saveToLocalStorage(nodes);
-				setLastSync(new Date());
-			}
-		}
-	}, [nodes, familyId, setLastSync, loadLocal, saveToLocalStorage]);
 
 	useLayoutEffect(() => {
 		let initialZoom = 1;
@@ -58,11 +84,13 @@ export default function FamilyTree({ setLastSync, chart, saveToLocalStorage, nod
 				.data(nodes)
 				.compact(true)
 				.svgHeight(window.innerHeight)
+				.nodeHeight(() => 320)
+				.nodeWidth(() => 500)
 				.linkYOffset(0)
-				.rootMargin(100)
+				.rootMargin(160)
 				.setActiveNodeCentered(true)
 				.buttonContent(({ node }: { node: { children: boolean } }) => {
-					return renderToStaticMarkup(<div className='m-auto w-auto rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 shadow'>{node.children ? 'Tutup' : 'Buka'}</div>);
+					return renderToStaticMarkup(<div className='m-auto w-auto rounded border border-gray-300 bg-white p-1 text-sm text-gray-700 shadow'>{node.children ? <ChevronUp className='size-3' /> : <ChevronDown className='size-3' />}</div>);
 				})
 				.initialZoom(initialZoom)
 				.onNodeClick((node: { data: FamilyNode }) => {
