@@ -4,7 +4,7 @@ import { Inter as Font } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 
 const font = Font({
-	weight: ['400', '500', '600', '700', '800'],
+	weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 	subsets: ['latin'],
 	display: 'block',
 	preload: true,
