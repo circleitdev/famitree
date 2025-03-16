@@ -1,15 +1,16 @@
 'use client';
 
 import { OrgChart } from 'd3-org-chart';
-import { PlusIcon } from 'lucide-react';
+import { ExpandIcon, FullscreenIcon, KeyIcon, PlusIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import useLocalStorage from 'use-local-storage';
 import { FamilyNode, RendererFamilyNode } from '@/types/globals';
 import { Button } from '@/components/shadcn/button';
 import Editor from '@/components/editor/editor';
-import Menu from '@/components/menu/menu';
 import FamilyTree from '@/components/tree/family-tree';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/shadcn/dialog';
+import { Input } from '@/components/shadcn/input';
 
 const EmptyState = () => {
 	return (
@@ -21,25 +22,19 @@ const EmptyState = () => {
 	);
 };
 
-export default function Renderer({ nodes, title, id, updatedAt }: RendererFamilyNode) {
+export default function Renderer({ nodes }: RendererFamilyNode) {
 	const [data, setData] = useState<FamilyNode[]>(nodes);
+	const [token, setToken] = useLocalStorage<string>('token', '');
+
+	const tokenRef = useRef<HTMLInputElement>(null);
+
+	console.log(data);
 	const [editingNode, setEditingNode] = useState<FamilyNode | null>(null);
 	const [openEditor, setOpenEditor] = useState(false);
 	const [nodesView, setNodesView] = useState<'expand' | 'collapse' | 'default'>('default');
-	const [lastSync, setLastSync] = useState<Date>(updatedAt ?? new Date());
 	const [localStorage, setLocalStorage] = useLocalStorage<FamilyNode[]>('nodes', []);
-	const [family, setFamily] = useState<{ id: string; title: string }>({
-		id: id,
-		title: title,
-	});
 	const chart = useRef(new OrgChart<FamilyNode>());
 	const loadLocal = useSearchParams().get('local') === 'true';
-
-	const openLocalVersion = () => {
-		const url = new URL(window.location.href);
-		url.searchParams.set('local', 'true');
-		window.open(url.toString(), '_blank');
-	};
 
 	useEffect(() => {
 		if (loadLocal) {
@@ -55,20 +50,61 @@ export default function Renderer({ nodes, title, id, updatedAt }: RendererFamily
 
 	return (
 		<div id='wrapper' className='h-screen'>
+			<div className='fixed right-5 bottom-5 flex flex-none flex-col gap-3'>
+				<div>
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button size={'icon'} className='cursor-pointer shadow'>
+								<KeyIcon size={16} />
+							</Button>
+						</DialogTrigger>
+						<DialogContent className='backdrop-blur-3xl'>
+							<DialogHeader>
+								<DialogTitle className='font-bold'>Password</DialogTitle>
+								<DialogDescription>Set password jika ingin mengubah dan mengedit data</DialogDescription>
+							</DialogHeader>
+							<form
+								action=''
+								onSubmit={(e) => {
+									e.preventDefault();
+									setToken(tokenRef.current?.value);
+								}}
+								className='flex flex-col gap-4'
+							>
+								<div>
+									<Input defaultValue={token} id='name' className='col-span-3' ref={tokenRef} />
+								</div>
+								<DialogFooter>
+									<DialogClose asChild>
+										<Button type='submit'>Simpan</Button>
+									</DialogClose>
+								</DialogFooter>
+							</form>
+						</DialogContent>
+					</Dialog>
+				</div>
+				<div>
+					<Button size={'icon'} onClick={() => setOpenEditor(true)} className='cursor-pointer shadow'>
+						<PlusIcon size={16} />
+					</Button>
+					<Editor setNodes={setData} nodes={data} editingNode={editingNode} openEditor={openEditor} setOpenEditor={setOpenEditor} />
+				</div>
+				<div>
+					<Button size={'icon'} onClick={() => chart.current.fit()} className='cursor-pointer shadow'>
+						<FullscreenIcon size={16} />
+					</Button>
+				</div>
+				<div>
+					<Button size={'icon'} onClick={() => setNodesView(nodesView === 'expand' || nodesView === 'default' ? 'collapse' : 'expand')} className='cursor-pointer shadow'>
+						<ExpandIcon size={16} />
+					</Button>
+				</div>
+			</div>
 			<div className='absolute w-full bg-white/30 p-2 text-center backdrop-blur-sm'>
 				<div className='flex justify-center'>
-					<span className='flex-none'>
-						<Button size={'icon'} onClick={() => setOpenEditor(true)} className='shadow'>
-							<PlusIcon size={16} />
-						</Button>
-						<Editor setNodes={setData} nodes={data} editingNode={editingNode} openEditor={openEditor} setOpenEditor={setOpenEditor} />
-					</span>
 					<span className='flex flex-1 flex-col items-center justify-center'>
-						<h1 className='rounded font-semibold md:text-xl lg:text-3xl'>{family.title !== '' ? family.title : 'Silsilah Keluarga'}</h1>
-						<span className='mt-2 rounded bg-gray-100 p-1 text-xs font-bold text-gray-500'>Sinkronisasi: {family.id ? lastSync.toLocaleString() : 'Belum disimpan'}</span>
-					</span>
-					<span className='flex-none'>
-						<Menu loadLocalStorage={openLocalVersion} chart={chart.current} toggleNodesView={() => setNodesView(nodesView === 'expand' || nodesView === 'default' ? 'collapse' : 'expand')} nodes={data} setFamily={setFamily} family={family} lastSync={lastSync} />
+						<h1 className='rounded font-semibold md:text-xl lg:text-3xl'>{'Silsilah Keluarga Bani Mufadhillah'}</h1>
+						<span className='mt-2 rounded bg-gray-100 p-1 text-xs font-bold text-gray-500'>Terakhir diperbarui: {new Date().toLocaleString()}</span>
 					</span>
 				</div>
 			</div>
@@ -77,9 +113,7 @@ export default function Renderer({ nodes, title, id, updatedAt }: RendererFamily
 					saveToLocalStorage={setLocalStorage}
 					chart={chart.current}
 					nodes={data}
-					familyId={family.id}
 					nodesView={nodesView}
-					setLastSync={setLastSync}
 					clickNodeAction={(node: FamilyNode) => {
 						setOpenEditor(true);
 						setEditingNode(node);
